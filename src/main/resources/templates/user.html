@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <title>User page</title>
+    <style>
+        .sidebar {
+            position: fixed;
+            height: 100vh;
+            background: #F8F8F8;
+        }
+    </style>
+</head>
+<body>
+
+<header class="contaner-fluid bg-dark">
+    <div class="d-flex bd-highlight align-items-center">
+        <div class="p-2 w-100 bd-highlight text-white">
+            <span class="font-weight-bold" id="userEmail"></span>
+            with roles:
+            <span id="userRole"></span>
+        </div>
+        <div class="p-2 flex-shrink-1 bd-highlight">
+            <a class="nav-link text-white-50" href="/logout">Logout</a>
+        </div>
+    </div>
+</header>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-2 p-0 py-3">
+            <div class="nav-link bg-primary text-white">User</div>
+        </div>
+        <div class="col-10 offset-2 sidebar">
+            <div class="container-fluid bg-light px-4 py-3">
+                <h1>User information-page</h1>
+                <div class="card">
+                    <div class="card-header py-3">
+                        <div class="h4 m-0">About user</div>
+                    </div>
+                    <div class="card-body">
+                        <table class="table border-top">
+                            <thead>
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">First Name</th>
+                                <th scope="col">Last Name</th>
+                                <th scope="col">Age</th>
+                                <th scope="col">Email</th>
+                                <th scope="col">Role</th>
+                            </tr>
+                            </thead>
+                            <tbody  id="userInfo">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/user.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+</body>
+</html>
