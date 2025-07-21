@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: projectPP_3.1.1
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/mydbtest
+    username: root
+    password: "mother60"
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+        jdbc:
+          lob:
+            non_contextual_creation: true
+
+  thymeleaf:
+    cache: false    # Для разработки
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+  mvc:
+    static-path-pattern: /**
+  web:
+    resources:
+      static-locations: classpath:/static/
+      cache:
+        period: 0
+
+logging:
+  level:
+    org:
+      springframework:
+        web: DEBUG
+        security: DEBUG
+        orm:
+          jpa: DEBUG
+      hibernate:
+        SQL: DEBUG
+        type: TRACE # Для логгирования параметров запросов
+
+    root: INFO

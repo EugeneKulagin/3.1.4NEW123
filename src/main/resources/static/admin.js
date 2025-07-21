@@ -1,162 +1,166 @@
-document.addEventListener("DOMContentLoaded", function () {
-    getCurrentAdmin()
-    getAllUsers()
+// === URL API ===
+const API_URL = '/api/admin';
 
-});
+// === ССЫЛКИ НА DOM-ЭЛЕМЕНТЫ ===
+const usersTableBody = document.getElementById('usersTableBody');
+const dynamicModal = document.getElementById('dynamicModal');
+const modalContent = document.getElementById('modalContent');
 
-document.getElementById('formCreateNewUser').addEventListener('submit', function (event) {
-    event.preventDefault();
-    const formData = new FormData(this);
-    const rolesSelected = Array.from(document.getElementById('new_role').selectedOptions).map(option => ({
-        id: option.value,
-        name: option.text
-    }))
+// === ОСНОВНЫЕ ФУНКЦИИ ===
 
-    let newUser = {
-        firstName: formData.get('new_firstName'),
-        lastName: formData.get('new_lastName'),
-        age: formData.get('new_age'),
-        username: formData.get('new_email'),
-        password: formData.get('new_password'),
-        roles: rolesSelected
-    }
+// Загрузка списка пользователей
+async function loadUsers() {
+    const response = await fetch(`${API_URL}/users`);
+    const users = await response.json();
 
-    fetch('/api/admin', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(newUser)
-    })
-        .then(() => {
-            getAllUsers()
-            this.reset()
-            document.getElementById('adminTable').click()
-        })
-})
-
-function getCurrentAdmin() {
-    fetch("/api/currentAdmin")
-        .then( response => response.json())
-        .then( user=> {
-            const roles = user.roles.map(role => role.name.replace('ROLE_', ' '));
-            document.getElementById("adminEmail").textContent = user.username;
-            document.getElementById("adminRole").textContent = roles;
-
-            let tableCurrentAdmin = ""
-            tableCurrentAdmin += `
-                <tr id="${user.id}">
-                    <td>${user.id}</td>
-                    <td>${user.firstName}</td>
-                    <td>${user.lastName}</td>
-                    <td>${user.age}</td>
-                    <td>${user.email}</td>
-                    <td>${user.roles.map(role => role.name.replace('ROLE_', ' '))}</td>
-                </tr>`
-
-            document.getElementById("adminInfo").innerHTML = tableCurrentAdmin
-        })
+    usersTableBody.innerHTML = '';
+    users.forEach(user => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${user.id}</td>
+            <td>${user.username}</td>
+            <td>${user.lastName}</td>
+            <td>${user.email}</td>
+            <td>${user.roles.join(', ')}</td>
+            <td><button class="btn btn-info btn-sm" onclick="openEditUserModal(${user.id})">Edit</button></td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteUser(${user.id})">Delete</button></td>
+        `;
+        usersTableBody.appendChild(row);
+    });
 }
 
-function getAllUsers() {
-    fetch("/api/admin")
-        .then( response => response.json())
-        .then( response => {
-            let tableUser = ""
-            response.forEach(user => {
-                tableUser += `
-                <tr id="${user.id}">
-                    <td>${user.id}</td>
-                    <td>${user.firstName}</td>
-                    <td>${user.lastName}</td>
-                    <td>${user.age}</td>
-                    <td>${user.email}</td>
-                    <td>${user.roles.map(role => role.name.replace('ROLE_', ' '))}</td>
-                    <td>
-                        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modalEdit"
-                                onclick="getModalEdit(${user.id})" >Edit</button>
-                    </td>
-                   
-                    <td>
-                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalDelete"
-                        onclick="getModalDelete(${user.id})">Delete</button>
-                    </td>
-                </tr>`
-            })
-            document.getElementById("allUsers").innerHTML = tableUser
-        })
+// Получение списка ролей
+async function getRoles() {
+    const response = await fetch(`${API_URL}/roles`);
+    return await response.json(); // массив строк: ["ROLE_USER", "ROLE_ADMIN"]
 }
 
-function getModalDelete(userId) {
-    fetch(`/api/admin/${userId}`)
-        .then( response => response.json())
-        .then( user=> {
-            document.getElementById('deleteUserId').value = user.id;
-            document.getElementById('deleteFirstName').value = user.firstName;
-            document.getElementById('deleteLastName').value = user.lastName;
-            document.getElementById('deleteAge').value = user.age;
-            document.getElementById('deleteEmail').value = user.email;
-            document.getElementById('deletePassword').value = user.password;
-        })
+// Открытие формы добавления пользователя
+async function openAddUserModal() {
+    const roles = await getRoles();
+    const formHTML = generateUserFormHTML({roles});
+    modalContent.innerHTML = formHTML;
+    $(dynamicModal).modal('show');
+
+    setupFormSubmit(() => {
+        $(dynamicModal).modal('hide');
+        loadUsers();
+    });
+    console.log('Сгенерированная форма:', formHTML);
+    console.log('modalContent после вставки:', modalContent.innerHTML);
 }
 
-document.getElementById('formDeleteUser').addEventListener('submit', function (event) {
-    event.preventDefault();
+// Открытие формы редактирования пользователя
+async function openEditUserModal(userId) {
+    const [userData, roles] = await Promise.all([
+        fetch(`${API_URL}/users/${userId}`).then(res => res.json()),
+        getRoles()
+    ]);
 
-    let idDeleteUser = document.getElementById('deleteUserId').value
+    const formHTML = generateUserFormHTML({user: userData, roles});
+    modalContent.innerHTML = formHTML;
+    $(dynamicModal).modal('show');
 
-    fetch('/api/admin/'+idDeleteUser, {
+    setupFormSubmit(() => {
+        $(dynamicModal).modal('hide');
+        loadUsers();
+    }, userId);
+}
+
+// Удаление пользователя
+async function deleteUser(userId) {
+    if (!confirm('Вы уверены, что хотите удалить пользователя?')) return;
+
+    await fetch(`${API_URL}/users/${userId}`, {
         method: 'DELETE'
-    })
-        .then(() => {
-            getAllUsers()
+    });
 
-            document.getElementById('closeDeleteUser').click()
-        })
-})
-
-function getModalEdit(userId) {
-    fetch(`/api/admin/${userId}`)
-        .then( response => response.json())
-        .then( user=> {
-            document.getElementById('editUserId').value = user.id;
-            document.getElementById('editFirstName').value = user.firstName;
-            document.getElementById('editLastName').value = user.lastName;
-            document.getElementById('editAge').value = user.age;
-            document.getElementById('editEmail').value = user.email;
-            document.getElementById('editPassword').value = user.password;
-        })
+    await loadUsers();
 }
 
-document.getElementById('formEditUser').addEventListener('submit', function (event) {
-    event.preventDefault();
-    const formData = new FormData(this);
+// === ГЕНЕРАЦИЯ HTML ФОРМЫ ДОБАВЛЕНИЯ/РЕДАКТИРОВАНИЯ ПОЛЬЗОВАТЕЛЯ ===
+function generateUserFormHTML({user = {}, roles = []}) {
+    const isEdit = !!user.id;
 
-    const rolesSelected = Array.from(document.getElementById('editRoles').selectedOptions).map(option => ({
-        id: option.value,
-        name: option.text
-    }))
+    let roleCheckboxes = '';
+    roles.forEach(role => {
+        const checked = user.roles && user.roles.includes(role) ? 'checked' : '';
+        roleCheckboxes += `
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" name="roles" value="${role}" ${checked}>
+                <label class="form-check-label">${role}</label>
+            </div>`;
+    });
 
-    let editUser = {
-        id : formData.get('editUserId'),
-        firstName: formData.get('editFirstName'),
-        lastName: formData.get('editLastName'),
-        age: formData.get('editAge'),
-        username: formData.get('editEmail'),
-        password: formData.get('editPassword'),
-        roles: rolesSelected
-    }
+    return `
+        <form id="userForm">
+            <div class="modal-header">
+                <h5 class="modal-title">${isEdit ? 'Edit User' : 'Add New User'}</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                ${isEdit ? `<input type="hidden" name="id" value="${user.id}">` : ''}
+                
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" class="form-control" name="username" value="${user.username || ''}" required>
+                </div>
+                <div class="form-group">
+                    <label>Last Name</label>
+                    <input type="text" class="form-control" name="lastName" value="${user.lastName || ''}" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" class="form-control" name="email" value="${user.email || ''}" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" class="form-control" name="password" ${isEdit ? '' : 'required'}>
+                </div>
+                <div class="form-group">
+                    <label>Roles</label>
+                    ${roleCheckboxes}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-success">${isEdit ? 'Update' : 'Add'}</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </form>
+    `;
+}
 
-    fetch('/api/admin', {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(editUser)
-    })
-        .then(() => {
-            getAllUsers()
-            this.reset()
-            document.getElementById('closeEditUser').click()
-        })
-})
+// === ОБРАБОТЧИК ОТПРАВКИ ФОРМЫ ===
+function setupFormSubmit(onSuccess, userId = null) {
+    const form = document.getElementById('userForm');
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+        const data = {
+            username: formData.get('username'),
+            lastName: formData.get('lastName'),
+            email: formData.get('email'),
+            password: formData.get('password') || undefined,
+            roles: [...formData.getAll('roles')]
+        };
+
+        const method = userId ? 'PUT' : 'POST';
+        const url = userId ? `${API_URL}/users/${userId}` : `${API_URL}/users`;
+
+        await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        onSuccess();
+    }, {once: true});
+}
+
+// === ИНИЦИАЛИЗАЦИЯ ===
+document.addEventListener('DOMContentLoaded', () => {
+    loadUsers();
+});

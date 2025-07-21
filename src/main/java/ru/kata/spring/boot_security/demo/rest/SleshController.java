@@ -4,9 +4,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
-public class LoginController {
-    @GetMapping(value = "/login")
-    public String loginPage(){
-        return "/index";
+public class SleshController {
+    @GetMapping("/")
+    public String redirectTiAdmin() {
+        return "redirect:/admin.html";
     }
 }
